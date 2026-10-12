@@ -47,6 +47,11 @@
                         <input id="iot-name" name="name" type="text" maxlength="45" required>
                     </div>
                     <div class="field">
+                        <label for="iot-user">User</label>
+                        <input id="iot-user" type="text" maxlength="45">
+                        <button id="aggiornauser" type="button">Aggiorna user</button>
+                    </div>
+                    <div class="field">
                         <label for="iot-macaddress">MAC Address</label>
                         <input id="iot-macaddress" name="macaddress" type="text" maxlength="45" required>
                     </div>
@@ -57,6 +62,7 @@
                     <div class="field field-wide">
                         <label for="iot-jsonrange">Json range</label>
                         <textarea id="iot-jsonrange" name="jsonrange" rows="4" maxlength="512"></textarea>
+                        <p>esempio 2 sensori: {"user":"","sensors":[{"min":20,"max":50,"distmax":5},{"min":50,"max":100}]}</p>
                     </div>
                 </div>
                 <div class="form-actions">

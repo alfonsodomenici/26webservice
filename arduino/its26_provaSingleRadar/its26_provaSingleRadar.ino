@@ -121,6 +121,7 @@ void loopMain() {
   int distMinCapt = 50;
   int valore = (int)val1;
   if (valore < distMinCapt && !capturing && sec > 16) {
+    getIot();
     capturing = true;
     steadyAlarm = 0;
     sec = 1;

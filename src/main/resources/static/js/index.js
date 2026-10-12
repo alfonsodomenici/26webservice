@@ -34,6 +34,7 @@ const iotNameInput = document.querySelector("#iot-name");
 const iotMacInput = document.querySelector("#iot-macaddress");
 const iotDescriptionInput = document.querySelector("#iot-description");
 const iotJsonRangeInput = document.querySelector("#iot-jsonrange");
+const iotUserInput = document.querySelector("#iot-user");
 const iotFormTitle = document.querySelector("#iot-form-title");
 let currentUser;
 
@@ -205,6 +206,25 @@ async function saveIot(event) {
 }
 
 iotForm.addEventListener("submit", saveIot);
+document.querySelector("#aggiornauser").addEventListener("click", () => {
+  let jsonrange;
+  try {
+    jsonrange = iotJsonRangeInput.value.trim()
+      ? JSON.parse(iotJsonRangeInput.value)
+      : {};
+  } catch {
+    alert("Json range non è un JSON valido.");
+    return;
+  }
+
+  if (!jsonrange || typeof jsonrange !== "object" || Array.isArray(jsonrange)) {
+    alert("Json range deve contenere un oggetto JSON.");
+    return;
+  }
+
+  jsonrange.user = iotUserInput.value;
+  iotJsonRangeInput.value = JSON.stringify(jsonrange);
+});
 document.querySelector("#new-iot").addEventListener("click", resetIotForm);
 document.querySelector("#cancel-edit").addEventListener("click", resetIotForm);
 document.querySelector("#refresh-iots").addEventListener("click", loadIots);
