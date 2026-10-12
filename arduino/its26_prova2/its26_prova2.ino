@@ -26,21 +26,19 @@ float max2 = 50;
 */
 const int ledPin = 1;
 int sec = 0;
-const int ultraSig = 12;  // pin digitale radar1
+const int ultraSig = 12; // pin digitale radar1
 Ultrasonic sensor1(ultraSig);
 int alarm1 = 0;
 float val1 = 0;
 float min1 = 20;
 float max1 = 50;
 
-const int ultraSig2 = 10;  // pin digitale radar2
+const int ultraSig2 = 10; // pin digitale radar2
 Ultrasonic sensor2(ultraSig2);
 int alarm2 = 0;
 float val2 = 0;
 float min2 = 20;
 float max2 = 50;
-
-
 
 bool connessioneWIFI();
 void getIot();
@@ -50,9 +48,11 @@ void blinkLed(int flag);
 void checkSensor1();
 void checkSensor2();
 
-void setup() {
+void setup()
+{
   Serial.begin(115200);
-  WiFi.onEvent([](arduino_event_id_t event, arduino_event_info_t info) {
+  WiFi.onEvent([](arduino_event_id_t event, arduino_event_info_t info)
+               {
     if (event == ARDUINO_EVENT_WIFI_STA_CONNECTED) {
       Serial.println("Evento Wi-Fi: associato all'access point.");
     } else if (event == ARDUINO_EVENT_WIFI_STA_GOT_IP) {
@@ -60,33 +60,38 @@ void setup() {
     } else if (event == ARDUINO_EVENT_WIFI_STA_DISCONNECTED) {
       Serial.print("Evento Wi-Fi: disconnesso, motivo=");
       Serial.println(static_cast<int>(info.wifi_sta_disconnected.reason));
-    }
-  });
+    } });
 
   delay(5000);
   Serial.println("Cronometro!! in secondi");
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(ledPin, OUTPUT);
   Wire.begin();
-  //dht.begin();
+  // dht.begin();
 
-  if (connessioneWIFI()) {
+  if (connessioneWIFI())
+  {
     getIot();
-  } else {
+  }
+  else
+  {
     Serial.println("GET non eseguita: Wi-Fi non connesso.");
   }
 }
 
-void loop() {
+void loop()
+{
   delay(1000);
   sec++;
   checkSensor1();
   checkSensor2();
   showStatus();
-  if (sec % 10 == 0) postData();
+  if (sec % 10 == 0)
+    postData();
 }
 
-bool connessioneWIFI() {
+bool connessioneWIFI()
+{
   Serial.print("Connessione a ");
   Serial.println(ssid);
   WiFi.mode(WIFI_STA);
@@ -96,18 +101,21 @@ bool connessioneWIFI() {
   IPAddress gateway(192, 168, 137, 1);
   IPAddress subnet(255, 255, 255, 0);
   IPAddress dns(192, 168, 137, 1);
-  if (!WiFi.config(localIP, gateway, subnet, dns)) {
+  if (!WiFi.config(localIP, gateway, subnet, dns))
+  {
     Serial.println("Impossibile configurare l'IP statico.");
   }
 
   WiFi.begin(ssid, password);
   unsigned long startTime = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - startTime < 12000) {
+  while (WiFi.status() != WL_CONNECTED && millis() - startTime < 12000)
+  {
     delay(500);
     Serial.print(".");
   }
 
-  if (WiFi.status() != WL_CONNECTED) {
+  if (WiFi.status() != WL_CONNECTED)
+  {
     Serial.println("\nConnessione Wi-Fi fallita.");
     Serial.print("Stato Wi-Fi: ");
     Serial.println(static_cast<int>(WiFi.status()));
@@ -123,60 +131,73 @@ bool connessioneWIFI() {
   return true;
 }
 
-void setRange() {
+void setRange()
+{
   const char *jsonRangeStr = iot["jsonrange"];
-  if (jsonRangeStr == nullptr) {
+  if (jsonRangeStr == nullptr)
+  {
     Serial.println("jsonrange assente nel record IoT.");
     return;
   }
 
   JsonDocument rangeDoc;
   DeserializationError error = deserializeJson(rangeDoc, jsonRangeStr);
-  if (error) {
+  if (error)
+  {
     Serial.print("Errore nel parsing di jsonrange: ");
     Serial.println(error.c_str());
     return;
   }
 
-  if (rangeDoc.size() > 0) {
+  if (rangeDoc.size() > 0)
+  {
     min1 = rangeDoc[0]["min"] | min1;
     max1 = rangeDoc[0]["max"] | max1;
   }
-  if (rangeDoc.size() > 1) {
+  if (rangeDoc.size() > 1)
+  {
     min2 = rangeDoc[1]["min"] | min2;
     max2 = rangeDoc[1]["max"] | max2;
   }
 }
 
-void showStatus() {
+void showStatus()
+{
   Serial.print(sec);
   Serial.println(" secondi run");
   blinkLed(alarm1 || alarm2);
 }
 
-void blinkLed(int flag) {
-  if (flag == 1) {
+void blinkLed(int flag)
+{
+  if (flag == 1)
+  {
     digitalWrite(LED_BUILTIN, sec % 2 == 0 ? HIGH : LOW);
-  } else {
+  }
+  else
+  {
     digitalWrite(LED_BUILTIN, LOW);
   }
 }
 
-void checkSensor1() {
+void checkSensor1()
+{
   val1 = sensor1.readCM();
   Serial.print(val1);
   Serial.println(" cm");
   alarm1 = (val1 < min1 || val1 > max1) ? 1 : 0;
 }
 
-void checkSensor2() {
+void checkSensor2()
+{
   val2 = sensor2.readCM();
   Serial.print(val2);
   Serial.println(" cm");
   alarm2 = (val2 < min2 || val2 > max2) ? 1 : 0;
 }
 
-void getIot() {
+void getIot()
+{
   HTTPClient http;
   String macaddress = WiFi.macAddress();
   String requestUrl = String(serverAddress) + "/api/iot?macaddress=" + macaddress;
@@ -190,24 +211,32 @@ void getIot() {
   http.addHeader("X-Device-Key", deviceApiKey);
   int httpResponseCode = http.GET();
 
-  if (httpResponseCode == HTTP_CODE_OK) {
+  if (httpResponseCode == HTTP_CODE_OK)
+  {
     String payload = http.getString();
     DeserializationError error = deserializeJson(iot, payload);
-    if (error) {
+    if (error)
+    {
       Serial.print("Errore parsing JSON: ");
       Serial.println(error.c_str());
       iot.clear();
-    } else {
+    }
+    else
+    {
       Serial.println("JSON IoT ricevuto:");
       serializeJsonPretty(iot, Serial);
       Serial.println();
       setRange();
     }
-  } else if (httpResponseCode > 0) {
+  }
+  else if (httpResponseCode > 0)
+  {
     Serial.print("Errore HTTP del server: ");
     Serial.println(httpResponseCode);
     Serial.println(http.getString());
-  } else {
+  }
+  else
+  {
     Serial.print("Errore nella richiesta HTTP: ");
     Serial.println(httpResponseCode);
   }
@@ -215,19 +244,23 @@ void getIot() {
   http.end();
 }
 
-void postData() {
-  if (WiFi.status() != WL_CONNECTED) {
+void postData()
+{
+  if (WiFi.status() != WL_CONNECTED)
+  {
     Serial.println("POST non eseguita: Wi-Fi non connesso.");
     return;
   }
 
-  if (iot["id"].isNull()) {
+  if (iot["id"].isNull())
+  {
     Serial.println("POST non eseguita: record IoT non caricato.");
     return;
   }
 
   String jsonData = creaJsonData();
-  if (jsonData.length() > 120) {
+  if (jsonData.length() > 256)
+  {
     Serial.println("POST non eseguita: jsondata supera il limite di 120 caratteri.");
     return;
   }
@@ -251,14 +284,19 @@ void postData() {
   Serial.println(requestBody);
 
   int httpResponseCode = http.POST(requestBody);
-  if (httpResponseCode == HTTP_CODE_CREATED) {
+  if (httpResponseCode == HTTP_CODE_CREATED)
+  {
     Serial.println("Dato IoT inserito.");
     Serial.println(http.getString());
-  } else if (httpResponseCode > 0) {
+  }
+  else if (httpResponseCode > 0)
+  {
     Serial.print("Errore HTTP del server: ");
     Serial.println(httpResponseCode);
     Serial.println(http.getString());
-  } else {
+  }
+  else
+  {
     Serial.print("Errore nella richiesta POST: ");
     Serial.println(httpResponseCode);
   }
@@ -267,7 +305,8 @@ void postData() {
 }
 
 // Funzione che accetta i valori e restituisce un char* contenente il JSON
-char *creaJsonData() {
+char *creaJsonData()
+{
 
   // 1. Alloca un JsonDocument della dimensione adeguata.
   // Per un JSON così piccolo, 256 byte sono più che sufficienti e sicuri.
