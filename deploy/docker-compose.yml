@@ -1,0 +1,65 @@
+name: mio-servizio
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Europe/Rome
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - backend            # solo rete interna: HAProxy e gli altri container di "apps" non lo vedono
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
+
+  app:
+    image: ghcr.io/tuoutente/mio-servizio:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    # nessuna sezione "ports": il traffico arriva solo da HAProxy tramite la rete "apps"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_FORWARD_HEADERS_STRATEGY: native
+      TZ: Europe/Rome
+    networks:
+      backend:
+      apps:
+        aliases:
+          - mio-servizio   # nome DNS usato da HAProxy (evita collisioni con altri servizi "app")
+    depends_on:
+      mysql:
+        condition: service_healthy
+    # L'immagine eclipse-temurin non garantisce curl: il check usa /dev/tcp di bash
+    healthcheck:
+      test:
+        - CMD
+        - bash
+        - -c
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/8080 &&
+          printf 'GET /actuator/health HTTP/1.0\r\nHost: localhost\r\n\r\n' >&3 &&
+          grep -q '"status":"UP"' <&3
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 60s
+
+networks:
+  backend:
+    internal: true         # nessun accesso a internet dalla rete del database
+  apps:
+    external: true         # rete già esistente, condivisa con HAProxy
+
+volumes:
+  mysql-data:
