@@ -13,7 +13,7 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
-      - backend            # solo rete interna: HAProxy e gli altri container di "apps" non lo vedono
+      - backend # solo rete interna: HAProxy e gli altri container di "apps" non lo vedono
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
       interval: 5s
@@ -36,7 +36,7 @@ services:
       backend:
       apps:
         aliases:
-          - mio-servizio   # nome DNS usato da HAProxy (evita collisioni con altri servizi "app")
+          - 26webservice # nome DNS usato da HAProxy (evita collisioni con altri servizi "app")
     depends_on:
       mysql:
         condition: service_healthy
@@ -57,9 +57,9 @@ services:
 
 networks:
   backend:
-    internal: true         # nessun accesso a internet dalla rete del database
+    internal: true # nessun accesso a internet dalla rete del database
   apps:
-    external: true         # rete già esistente, condivisa con HAProxy
+    external: true # rete già esistente, condivisa con HAProxy
 
 volumes:
   mysql-data:
