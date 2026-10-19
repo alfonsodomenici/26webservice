@@ -1,0 +1,35 @@
+name: iot26-dev
+
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: iot26
+      TZ: Europe/Rome
+    ports:
+      - "127.0.0.1:3307:3306"
+    volumes:
+      - mysql-dev:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
+  app:
+    build: .
+    ports:
+      - "8081:8080"
+    environment:
+      MYSQL_HOST: mysql          # nome del servizio, non localhost
+      MYSQL_PORT: 3306           # porta interna del container, non quella pubblicata
+      MYSQL_DATABASE: iot26
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      TZ: Europe/Rome
+    depends_on:
+      mysql:
+        condition: service_healthy
+volumes:
+  mysql-dev:
