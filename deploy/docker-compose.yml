@@ -22,7 +22,7 @@ services:
       start_period: 30s
 
   app:
-    image: ghcr.io/tuoutente/mio-servizio:${IMAGE_TAG:-latest}
+    image: ${IMAGE}:${IMAGE_TAG:-latest}
     restart: unless-stopped
     # nessuna sezione "ports": il traffico arriva solo da HAProxy tramite la rete "apps"
     environment:

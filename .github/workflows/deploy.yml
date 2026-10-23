@@ -92,7 +92,8 @@ jobs:
 
       - name: Deploy
         run: |
-          ssh server "cd '$DEPLOY_DIR' && IMAGE_TAG='$GITHUB_SHA' bash -s" <<'EOF'
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"
+          ssh server "cd '$DEPLOY_DIR' && IMAGE='$IMAGE' IMAGE_TAG='$GITHUB_SHA' bash -s" <<'EOF'
           set -euo pipefail
           docker network inspect apps >/dev/null
           docker compose pull app
